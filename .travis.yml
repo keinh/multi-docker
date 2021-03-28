@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t khilario/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true khilario/react-test npm test
+
+after_success:
+  - docker build -t khilario/multi-client ./client
+  - docker build -t khilario/multi-nginx ./nginx
+  - docker build -t khilario/multi-server ./server
+  - docker build -t khilario/multi-worker ./worker
+  # Take those images and push them to docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push khilario/multi-client
+  - docker push khilario/multi-nginx
+  - docker push khilario/multi-server
+  - docker push khilario/multi-worker
